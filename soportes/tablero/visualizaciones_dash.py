@@ -16,7 +16,7 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 server = app.server
 
-data = pd.read_csv("../../data/bank-full.csv", sep=";")
+data = pd.read_csv("bank-full.csv", sep=";")
 data['y_num'] = data['y'].apply(lambda x: int(x == 'yes'))
 
 bins = [0, 25, 35, 45, 55, 65, 75, 100] 
@@ -29,10 +29,11 @@ data['month'] = pd.Categorical(data['month'],categories=months, ordered=True)
 
 
 cat_feats=['job','marital','education','default','housing','loan','contact','month','poutcome','age_group']
+cat_feats_pie=['marital','education','default','housing','loan','contact','poutcome','age_group']
 
 
 # Define a standard figure width and height
-figure_width = 800
+figure_width = 1200
 figure_height = 400
 
 
@@ -77,12 +78,12 @@ app.layout = html.Div(style={'backgroundColor': colors['background']}, children=
     ]),
     html.Br(),
     html.H3("Comportamiento de usuarios suscritos", style={'color': colors['text']}),
-    dcc.Graph(id='pie-chart', style={'width': '50%', 'height': '300px'}),
+    dcc.Graph(id='pie-chart', style={'width': f'{figure_width}px', 'height': f'{figure_height}px'}),
     html.Div([
             html.Span("Filtrar por categoria:", style={'color': colors['text']}),
             dcc.Dropdown(id='categoria_2', value='marital',
                         options=[{'label': col, 'value': col}
-                              for col in cat_feats])
+                              for col in cat_feats_pie])
         ])
 ])
 
@@ -92,8 +93,16 @@ app.layout = html.Div(style={'backgroundColor': colors['background']}, children=
     Input(component_id='categoria_2', component_property='value')
 )
 def update_pie_chart(col_for_group):
+
     filtered_data = data[data['y_num'] == 1]
-    fig = px.pie(filtered_data, names=col_for_group, title='Distribución de Ocupaciones de Clientes que Suscribieron')
+    fig = px.pie(filtered_data, names=col_for_group)
+    fig.update_layout(
+        plot_bgcolor=colors['background'],
+        paper_bgcolor=colors['background'],
+        font_color=colors['text'],
+        title=f'Distribución de {col_for_group.capitalize()} de Clientes que Suscribieron',
+        title_x=0.5  # Center the chart title
+    )
     return fig
 
 @app.callback(
