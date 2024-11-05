@@ -35,9 +35,31 @@ cat_feats=['job','marital','education','default','housing','loan','contact','mon
 figure_width = 800
 figure_height = 400
 
+
+
+def calculate_metrics(data):
+    total_records = len(data)
+
+    total_subscription = data['y_num'].sum()
+    return total_records, total_subscription
+
+# Calculate initial metrics
+total_records, total_subscription = calculate_metrics(data)
+
 app.layout = html.Div(style={'backgroundColor': colors['background']}, children=[
     html.H1("Productos bancarios: Tablero para la toma de decisiones",
             style={'textAlign': 'center', 'color': colors['text']}),
+
+
+    html.Div(style={'display': 'flex', 'justifyContent': 'space-between', 'marginBottom': 20}, children=[
+    html.Div(children=[
+        html.H3(f"Total de Registros: {total_records:,}", style={'color': colors['text']}),
+    ], style={'textAlign': 'center', 'width': '48%', 'border': '1px solid lightgray', 'padding': 10, 'borderRadius': 5}),
+    html.Div(children=[
+        html.H3(f"Total de Suscripciones: {total_subscription:,}", style={'color': colors['text']}),
+    ], style={'textAlign': 'center', 'width': '48%', 'border': '1px solid lightgray', 'padding': 10, 'borderRadius': 5}),
+    ]),
+
     html.H3("Porcentaje de suscripcion deposito fijo", style={'color': colors['text']}),
     dcc.Graph(id='bar-chart', style={'width': f'{figure_width}px', 'height': f'{figure_height}px'}),
     dcc.Markdown('''
@@ -54,8 +76,25 @@ app.layout = html.Div(style={'backgroundColor': colors['background']}, children=
                               for col in cat_feats])
     ]),
     html.Br(),
+    html.H3("Comportamiento de usuarios suscritos", style={'color': colors['text']}),
+    dcc.Graph(id='pie-chart', style={'width': '50%', 'height': '300px'}),
+    html.Div([
+            html.Span("Filtrar por categoria:", style={'color': colors['text']}),
+            dcc.Dropdown(id='categoria_2', value='marital',
+                        options=[{'label': col, 'value': col}
+                              for col in cat_feats])
+        ])
 ])
 
+
+@app.callback(
+    Output(component_id='pie-chart', component_property='figure'),
+    Input(component_id='categoria_2', component_property='value')
+)
+def update_pie_chart(col_for_group):
+    filtered_data = data[data['y_num'] == 1]
+    fig = px.pie(filtered_data, names=col_for_group, title='Distribución de Ocupaciones de Clientes que Suscribieron')
+    return fig
 
 @app.callback(
     Output(component_id='bar-chart', component_property='figure'),
